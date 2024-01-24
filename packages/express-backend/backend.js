@@ -73,7 +73,7 @@ const findUserByName = (name) => {
     }
   });
 
-// find user by id
+// find user by id (get request)
 const findUserById = (id) =>
   users["users_list"].find((user) => user["id"] === id); //find returns first occurence
 
@@ -86,6 +86,17 @@ app.get("/users/:id", (req, res) => {
     res.send(result);
   }
 });
-
+ 
+// add new resourse (post request)
+const addUser = (user) => {
+    users["users_list"].push(user);
+    return user;
+  };
+  
+  app.post("/users", (req, res) => {
+    const userToAdd = req.body; //req.body to access data 
+    addUser(userToAdd);
+    res.send();
+  });
 
 
