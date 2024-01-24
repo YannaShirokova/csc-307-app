@@ -59,7 +59,7 @@ app.listen(port, () => {
 
 // Find users by name and job
 const findUsersByNameAndJob = (name, job) => {
-    console.log("Searching for:", name, job);
+    
     return users["users_list"].filter(
       (user) => user["name"] === name && user["job"] === job
     );
@@ -67,18 +67,18 @@ const findUsersByNameAndJob = (name, job) => {
   
 // New route to get users by name and job
 app.get("/users/search", (req, res) => {
-    console.log("Handling /users/search request"); // Add this line
+    
     const name = req.query.name;
     const job = req.query.job;
   
-    console.log("Received parameters:", name, job);
+   
   
     if (name !== undefined && job !== undefined) {
         let result = findUsersByNameAndJob(name, job);
         result = { users_list: result };
         res.send(result);
     } else {
-        res.status(400).send("Bad request. Both name and job are required.");
+        res.status(400).send("Bad request");
     }
 });
 
@@ -138,7 +138,7 @@ app.delete("/users/:id", (req, res) => {
     const deletedUser = deleteUserById(id);
   
     if (deletedUser === null) {
-      res.status(404).send("Resource not found.");
+      res.status(404).send("Resource not found");
     } else {
       res.send(deletedUser);
     }
@@ -147,11 +147,10 @@ app.delete("/users/:id", (req, res) => {
 const deleteUserById = (id) => {
     const index = users["users_list"].findIndex((user) => user["id"] === id);
     if (index !== -1) {
-      // User found, remove from the array and return the deleted user
+      // remove from the array and return the deleted user
       const deletedUser = users["users_list"].splice(index, 1)[0];
       return deletedUser;
     } else {
-      // User not found
       return null;
     }
   };
