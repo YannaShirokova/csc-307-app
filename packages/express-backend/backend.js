@@ -86,10 +86,6 @@ app.get("/users/search", (req, res) => {
 });
 
 
-
-
-
-
 // get users by name --> http://localhost:8000/users?name=Charlie
 // get users all --> http://localhost:8000/users
 const findUserByName = (name) => {
@@ -122,28 +118,50 @@ app.get("/users/:id", (req, res) => {
     res.send(result);
   }
 });
- 
+//----------------------------------------------------
+
+// generate random id 
+const gen_id = () => {
+  const min = 1;
+  const max = 1000; 
+
+  const gen = Math.floor(Math.random() *(max-min+1))+ min;
+  return gen.toString(); // fixed issue... had to be a string
+};
+
+
 // add new resourse (post request)
 const addUser = (user) => {
     users["users_list"].push(user);
     return user;
   };
   
-  app.post("/users", (req, res) => {
+app.post("/users", (req, res) => {
     const userToAdd = req.body; //req.body to access data 
-    addUser(userToAdd);
-    res.send();
-});
+    // use random id
+    const get_id = gen_id();
 
+    //const idUser = { ...userToAdd, id: get_id}
+    // add id to object
+    const idUser = {
+      id: get_id,
+      name: userToAdd.name,
+      job: userToAdd.job,
+    };
+
+    addUser(idUser);
+    res.status(201).send(idUser); // send idUser
+});
+//----------------------------------------------------
 // remove a particular user by id 
 app.delete("/users/:id", (req, res) => {
     const id = req.params.id;
     const deletedUser = deleteUserById(id);
   
     if (deletedUser === null) {
-      res.status(404).send("Resource not found");
+      res.status(404).send();
     } else {
-      res.send(deletedUser);
+      res.status(204).send();
     }
 });
 

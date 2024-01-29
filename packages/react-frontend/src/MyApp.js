@@ -4,16 +4,48 @@ import Form from "./Form";
 
   function MyApp() {
     const [characters, setCharacters] = useState([]);
-    function removeOneCharacter(index) {
-      const updated = characters.filter((character, i) => {
-        return i !== index;
+    
+    
+    function removeOneCharacter(index, id) {
+      
+      fetch(`http://localhost:8000/users/${id}`, { // string literal = backslash
+        method: 'DELETE',
+      })
+      .then((res) => {
+        if (res.status === 204) {
+          const updated = characters.filter((character, i) => {
+            return i !== index;
+          });
+          setCharacters(updated);
+
+        } else if (res.status === 404) {
+          console.log('ID Not Found');
+        } else {
+          console.log("error when deleting user");
+        }
+      })
+      .catch((error) => {
+        console.log(error);
       });
-      setCharacters(updated);
     }
 
     function updateList(person) { 
       postUser(person)
-        .then(() => setCharacters([...characters, person]))
+        .then((res) => {
+          if (res.status === 201)
+          {
+            return res.json(); 
+          } else {
+            throw new Error("Can't add user"); // need?
+          }
+        })
+         
+        
+        .then((json) => {
+          setCharacters([...characters, json]); 
+          
+        })
+
         .catch((error) => {
           console.log(error);
         })
