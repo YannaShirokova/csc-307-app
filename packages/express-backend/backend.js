@@ -1,35 +1,7 @@
 import express from "express";
 import cors from "cors";
 
-const users = {
-    users_list: [
-      {
-        id: "xyz789",
-        name: "Charlie",
-        job: "Janitor"
-      },
-      {
-        id: "abc123",
-        name: "Mac",
-        job: "Bouncer"
-      },
-      {
-        id: "ppp222",
-        name: "Mac",
-        job: "Professor"
-      },
-      {
-        id: "yat999",
-        name: "Dee",
-        job: "Aspring actress"
-      },
-      {
-        id: "zap555",
-        name: "Dennis",
-        job: "Bartender"
-      }
-    ]
-  };
+import userServices from "./user-services.js"; 
 
 //instance of express
 const app = express();
@@ -42,6 +14,8 @@ app.use(cors());
 //process incoming data in json
 app.use(express.json());
 
+// GET REUQUESTS ----------------------------------------------
+
 //api endpoint
 // get request
 // if match pattern '/', hello world prints
@@ -49,76 +23,40 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+// get users based on what is provided (name, job)
+// use function in user-services
 
-//backend server listening on our port
-app.listen(port, () => {
-  console.log(
-    `Example app listening at http://localhost:${port}`
-  );
+app.get("/users", (req, res) => {
+  const name = req.query.name;
+  const job = req.query.job;
+
+  userServices.getUsers(name, job)
+    .then((result) => {
+      res.send({ users_list: result });
+    })
+    .catch((error) => {
+      res.status(500).send("not found"); // 500? 
+    });
 });
-
-
-
-
-// Find users by name and job
-const findUsersByNameAndJob = (name, job) => {
-    
-    return users["users_list"].filter(
-      (user) => user["name"] === name && user["job"] === job
-    );
-};
-  
-// New route to get users by name and job
-app.get("/users/search", (req, res) => {
-    
-    const name = req.query.name;
-    const job = req.query.job;
-  
-   
-  
-    if (name !== undefined && job !== undefined) {
-        let result = findUsersByNameAndJob(name, job);
-        result = { users_list: result };
-        res.send(result);
-    } else {
-        res.status(400).send("Bad request");
-    }
-});
-
-
-// get users by name --> http://localhost:8000/users?name=Charlie
-// get users all --> http://localhost:8000/users
-const findUserByName = (name) => {
-    return users["users_list"].filter(
-      (user) => user["name"] === name
-    );
-  };
-  
-  app.get("/users", (req, res) => {
-    const name = req.query.name; //using query 
-    if (name != undefined) {
-      let result = findUserByName(name);
-      result = { users_list: result };
-      res.send(result);
-    } else {
-      res.send(users);
-    }
-  });
 
 // find user by id (get request)
-const findUserById = (id) =>
-  users["users_list"].find((user) => user["id"] === id); //find returns first occurence
-
 app.get("/users/:id", (req, res) => {
-  const id = req.params["id"]; //or req.params.id
-  let result = findUserById(id);
-  if (result === undefined) {
-    res.status(404).send("Resource not found."); //note syntax
-  } else {
-    res.send(result);
-  }
+  const id = req.params.id;
+
+  userServices.findUserById(id)
+    .then((result) => {
+      if (!result) {
+        res.status(404).send();
+      } else {
+        res.send(result);
+      }
+    })
+    .catch((error) => {
+      res.status(500).send("not found");
+    });
 });
-//----------------------------------------------------
+
+// POST REQUEST ----------------------------------------------------
 
 // generate random id 
 const gen_id = () => {
@@ -129,52 +67,58 @@ const gen_id = () => {
   return gen.toString(); // fixed issue... had to be a string
 };
 
-
-// add new resourse (post request)
-const addUser = (user) => {
-    users["users_list"].push(user);
-    return user;
-  };
-  
+// add a user
 app.post("/users", (req, res) => {
     const userToAdd = req.body; //req.body to access data 
-    // use random id
-    const get_id = gen_id();
+
+    //const get_id = gen_id();
+    
 
     //const idUser = { ...userToAdd, id: get_id}
     // add id to object
-    const idUser = {
-      id: get_id,
-      name: userToAdd.name,
-      job: userToAdd.job,
-    };
+    //const idUser = {
+    //  id: get_id,
+    //  name: userToAdd.name,
+    //  job: userToAdd.job,
+    //};
 
-    addUser(idUser);
-    res.status(201).send(idUser); // send idUser
+    userServices.addUser(userToAdd)
+      .then((result) => {
+        res.status(201).send(result);
+      })
+      .catch((error) => {
+        //console.error(error); --> print if i want
+        res.status(500).send("error");
+      });
 });
-//----------------------------------------------------
-// remove a particular user by id 
+    
+// DELETE REQUEST ----------------------------------------------------
+
+// remove user by id 
 app.delete("/users/:id", (req, res) => {
-    const id = req.params.id;
-    const deletedUser = deleteUserById(id);
-  
-    if (deletedUser === null) {
-      res.status(404).send();
-    } else {
-      res.status(204).send();
-    }
+  const id = req.params.id;
+
+  userServices.deleteUserById(id)
+    .then((deletedUser) => {
+      if (!deletedUser) {
+        res.status(404).send("not found");
+      } else {
+        res.status(204).send();
+      }
+    })
+    .catch((error) => {
+      res.status(500).send("error");
+    });
 });
 
-const deleteUserById = (id) => {
-    const index = users["users_list"].findIndex((user) => user["id"] === id);
-    if (index !== -1) {
-      // remove from the array and return the deleted user
-      const deletedUser = users["users_list"].splice(index, 1)[0];
-      return deletedUser;
-    } else {
-      return null;
-    }
-  };
+// -------------------------------------------------------------
+// backend server listening on our port --> put at end = 
+// ensure that all the routes are set before starting server
+app.listen(port, () => {
+  console.log(
+    `Example app listening at http://localhost:${port}`
+  );
+});
 
 
 
