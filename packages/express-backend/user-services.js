@@ -15,28 +15,28 @@ function getUsers(name, job) {
   if (name === undefined && job === undefined) {
     promise = userModel.find();
   } else if (name && job){ // added
-    promise = findUsersByNameAndJob(name, job);
+    promise = findUsers(name, job);
   } else if (name && !job) {
-    promise = findUserByName(name);
+    promise = findUsers(name, '');
   } else if (job && !name) {
-    promise = findUserByJob(job);
+    promise =findUsers('', job);
   } 
   return promise;
 }
 
-// added
-function findUsersByNameAndJob(name, job) {
+function findUsers(name, job) {
     let query = {};
   
-    if (name){
-      if (job) {
-        query.name = name;
-        query.job = job;
-      }  
+    if (name) {
+      query.name = name;
+    }
+  
+    if (job) {
+      query.job = job;
     }
   
     return userModel.find(query);
-}
+  }
 
 function findUserById(id) {
   return userModel.findById(id);
@@ -48,6 +48,7 @@ function addUser(user) {
   return promise;
 }
 
+/*
 function findUserByName(name) {
   return userModel.find({ name: name });
 }
@@ -55,6 +56,7 @@ function findUserByName(name) {
 function findUserByJob(job) {
   return userModel.find({ job: job });
 }
+*/
 
 // added
 function deleteUserById(id) {
@@ -65,7 +67,8 @@ export default {
   addUser,
   getUsers,
   findUserById,
-  findUserByName,
-  findUserByJob,
+  findUsers, // added
+  //findUserByName,
+  //findUserByJob,
   deleteUserById, //added
 };
